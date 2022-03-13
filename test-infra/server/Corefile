@@ -1,0 +1,25 @@
+(main_config) {
+    log
+    errors
+    hosts /hosts.txt {
+        ttl 30
+        fallthrough
+    }
+}
+
+(secure_config) {
+    tls servercert.pem privatekey.pem
+    import main_config
+}
+
+dns://.:53 {
+    import main_config
+}
+
+https://. {
+	import secure_config
+}
+
+tls://.:5553 {
+	import secure_config
+}
