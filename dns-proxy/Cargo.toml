@@ -1,0 +1,15 @@
+[package]
+name = "dns-proxy"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+tokio-native-tls = "0.3.0"
+bytes = "1.1.0"
+ttl_cache = "0.5.1"
+log = "0.4"
+fern = "0.5"
+chrono = "0.4"
