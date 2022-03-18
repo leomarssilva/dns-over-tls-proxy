@@ -1,8 +1,8 @@
 use crate::dns::dname::DomainName;
-use crate::dns::{MessagePacket, QType};
+use crate::dns::{MessageBytes, QType};
 use bytes::{Buf, BufMut, Bytes, BytesMut};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct ResourceRecord {
     pub domain_name: DomainName, // QNAME - needs to be parsed as labels
     pub resource_type: QType,    // TYPE - 16 bits
@@ -13,14 +13,12 @@ pub struct ResourceRecord {
 }
 
 impl ResourceRecord {
-    pub fn parse(mp: &mut MessagePacket) -> Self {
+    pub fn parse(mp: &mut MessageBytes) -> Self {
         let domain_name = DomainName::parse(mp);
         let resource_type = QType::from_u16(mp.buffer.get_u16());
         let resource_class = mp.buffer.get_u16();
         let ttl = mp.buffer.get_u32();
-        println!("ttl: {:?}", ttl);
         let data_length = mp.buffer.get_u16();
-        println!("data_length: {:?}", data_length);
 
         // println!("{:?}", DomainName::parse(&mut mp.clone()));
         let resource_data = mp.buffer.copy_to_bytes(data_length as usize);
@@ -52,13 +50,13 @@ impl ResourceRecord {
 mod tests {
     use crate::dns::dname::DomainName;
     use crate::dns::record::ResourceRecord;
-    use crate::dns::{MessagePacket, QType};
+    use crate::dns::{MessageBytes, QType};
     use bytes::{Bytes, BytesMut};
 
     #[test]
     fn test_record() {
         let b = Bytes::from(&b"\x02ns\x04alfa\x03net\x00\x00\x02\x00\x01\x00\x00\x0e\x10\x00\x02\xc0\x00\xc0\x03\x00\x05\x00\x01\x00\x00\x04\xb0\x00\x07\x04ip00\xc0\x03\xc0%\x00\x1c\x00\x01\x00\x00\x0e\x10\x00\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02mx\xc0\x03\x00\x0f\x00\x01\x00\x00\x0e\x10\x00\x07\x00\n\x03::1\x00\x03txt\xc0\x03\x00\x10\x00\x01\x00\x00\x0e\x10\x00\t\x08Test 001"[..]);
-        let mut a = MessagePacket::from_bytes(b);
+        let mut a = MessageBytes::from_bytes(b);
         let hs = ResourceRecord::parse(&mut a);
         assert_eq!(hs.domain_name.labels, vec!["ns", "alfa", "net"]);
         assert_eq!(hs.resource_type, QType::NS);
@@ -113,7 +111,7 @@ mod tests {
 
         let w = a.write(BytesMut::new());
 
-        let mut mp = MessagePacket::from_bytes(w.freeze());
+        let mut mp = MessageBytes::from_bytes(w.freeze());
         assert_eq!(ResourceRecord::parse(&mut mp), a);
 
         let b = Bytes::from(&b"xxxxxxxxxx"[..]);
@@ -128,7 +126,7 @@ mod tests {
 
         let w = a.write(BytesMut::new());
 
-        let mut mp = MessagePacket::from_bytes(w.freeze());
+        let mut mp = MessageBytes::from_bytes(w.freeze());
         assert_eq!(ResourceRecord::parse(&mut mp), a);
     }
 }

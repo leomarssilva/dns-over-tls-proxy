@@ -7,20 +7,20 @@ pub mod question;
 pub mod record;
 
 #[derive(Debug, Clone)]
-pub struct MessagePacket {
+pub struct MessageBytes {
     original: Bytes,
     buffer: Bytes,
 }
 
-impl MessagePacket {
+impl MessageBytes {
     pub fn from_bytes(b: Bytes) -> Self {
-        MessagePacket {
+        MessageBytes {
             original: b.clone(),
             buffer: b.clone(),
         }
     }
 }
-#[derive(PartialEq, Debug, Copy, Clone)]
+#[derive(PartialEq, Debug, Copy, Clone, Hash, Eq)]
 pub enum QType {
     A = 1,
     NS = 2,

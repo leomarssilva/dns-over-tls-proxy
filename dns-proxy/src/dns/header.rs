@@ -1,4 +1,4 @@
-use crate::dns::MessagePacket;
+use crate::dns::MessageBytes;
 use bytes::{Buf, BufMut, BytesMut};
 
 #[derive(PartialEq, Debug, Copy, Clone)]
@@ -50,7 +50,7 @@ pub struct Header {
 }
 
 impl Header {
-    pub fn parse(mp: &mut MessagePacket) -> Self {
+    pub fn parse(mp: &mut MessageBytes) -> Self {
         let buffer = &mut mp.buffer;
         let id = buffer.get_u16();
         let flags = buffer.get_u16();
@@ -96,13 +96,13 @@ impl Header {
 #[cfg(test)]
 mod tests {
     use crate::dns::header::{Header, ResponseCode};
-    use crate::dns::MessagePacket;
+    use crate::dns::MessageBytes;
     use bytes::{Bytes, BytesMut};
 
     #[test]
     fn test_header_read() {
         let b = Bytes::from(&b"09\tE\x00\x00\x00\x00\x00\x00\x00\x00"[..]);
-        let mut a = MessagePacket::from_bytes(b);
+        let mut a = MessageBytes::from_bytes(b);
         let hs = Header::parse(&mut a);
         assert_eq!(hs.id, 12345);
         assert_eq!(hs.question_response, 0);
@@ -113,7 +113,7 @@ mod tests {
         assert_eq!(hs.response_code, ResponseCode::Refused);
 
         let b = Bytes::from(&b"\xd41\xfd\x00\x00\x00\x00\x00\x00\x00\x00\x00"[..]);
-        let mut a = MessagePacket::from_bytes(b);
+        let mut a = MessageBytes::from_bytes(b);
         let hs = Header::parse(&mut a);
         assert_eq!(hs.id, 54321);
         assert_eq!(hs.question_response, 1);
@@ -124,7 +124,7 @@ mod tests {
         assert_eq!(hs.response_code, ResponseCode::NoError);
 
         let b = Bytes::from(&b"\x00\x00\x02\x03\x00\x03\x00\x17\x00\x05\x00\x07"[..]);
-        let mut a = MessagePacket::from_bytes(b);
+        let mut a = MessageBytes::from_bytes(b);
         let hs = Header::parse(&mut a);
         assert_eq!(hs.id, 0);
         assert_eq!(hs.question_response, 0);
@@ -160,7 +160,7 @@ mod tests {
 
         let w = a.write(BytesMut::new());
 
-        let mut mp = MessagePacket::from_bytes(w.freeze());
+        let mut mp = MessageBytes::from_bytes(w.freeze());
         assert_eq!(Header::parse(&mut mp), a);
 
         let a = Header {
@@ -181,7 +181,7 @@ mod tests {
 
         let w = a.write(BytesMut::new());
 
-        let mut mp = MessagePacket::from_bytes(w.freeze());
+        let mut mp = MessageBytes::from_bytes(w.freeze());
         assert_eq!(Header::parse(&mut mp), a);
     }
 }

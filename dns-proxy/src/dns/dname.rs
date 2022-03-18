@@ -1,8 +1,8 @@
-use crate::dns::MessagePacket;
+use crate::dns::MessageBytes;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
 use std::str;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Hash, Eq, Clone)]
 pub struct DomainName {
     pub labels: Vec<String>,
 }
@@ -47,7 +47,7 @@ impl DomainName {
         }
         labels
     }
-    pub fn parse(mp: &mut MessagePacket) -> Self {
+    pub fn parse(mp: &mut MessageBytes) -> Self {
         let labels = DomainName::internal_parse(vec![], &mut mp.original, &mut mp.buffer);
         DomainName { labels }
     }

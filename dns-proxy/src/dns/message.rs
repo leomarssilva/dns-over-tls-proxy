@@ -1,7 +1,7 @@
 use crate::dns::header::Header;
-use crate::dns::question::{Answer, Question};
+use crate::dns::question::Question;
 use crate::dns::record::ResourceRecord;
-use crate::dns::MessagePacket;
+use crate::dns::MessageBytes;
 use bytes::BytesMut;
 
 // https://datatracker.ietf.org/doc/html/rfc1035#section-4.1
@@ -9,13 +9,13 @@ use bytes::BytesMut;
 pub struct Message {
     pub header: Header,
     pub question: Vec<Question>,
-    pub answer: Vec<Answer>,
+    pub answer: Vec<ResourceRecord>,
     pub authority: Vec<ResourceRecord>,
     pub additional_records: Vec<ResourceRecord>,
 }
 
 impl Message {
-    pub fn parse(mp: &mut MessagePacket) -> Self {
+    pub fn parse(mp: &mut MessageBytes) -> Self {
         let header = Header::parse(mp);
 
         let question_count = header.question_count as usize;
@@ -27,7 +27,7 @@ impl Message {
         let answer_count = header.answer_count as usize;
         let mut answer = Vec::with_capacity(answer_count);
         for _ in 0..answer_count {
-            answer.push(Answer::parse(mp));
+            answer.push(ResourceRecord::parse(mp));
         }
 
         let authority_count = header.nameserver_count as usize;
@@ -72,7 +72,7 @@ mod tests {
     use crate::dns::header::{Header, ResponseCode};
     use crate::dns::message::Message;
     use crate::dns::question::Question;
-    use crate::dns::{MessagePacket, QType};
+    use crate::dns::{MessageBytes, QType};
     use bytes::{Bytes, BytesMut};
 
     #[test]
@@ -105,12 +105,12 @@ mod tests {
             authority: vec![],
             additional_records: vec![],
         };
-        let mut a = MessagePacket::from_bytes(b);
+        let mut a = MessageBytes::from_bytes(b);
         assert_eq!(Message::parse(&mut a), k);
 
         let w = k.write(BytesMut::new());
 
-        let mut mp = MessagePacket::from_bytes(w.freeze());
+        let mut mp = MessageBytes::from_bytes(w.freeze());
         assert_eq!(Message::parse(&mut mp), k);
     }
 }
