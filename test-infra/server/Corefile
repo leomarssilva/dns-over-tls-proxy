@@ -8,7 +8,7 @@
 }
 
 (secure_config) {
-    tls servercert.pem privatekey.pem
+    tls /run/secrets/coredns_certificate /run/secrets/coredns_private_key
     import main_config
 }
 

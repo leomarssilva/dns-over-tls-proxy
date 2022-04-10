@@ -19,18 +19,20 @@ use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct Cache {
-    url: String,
+    address: String,
+    servername: String,
     tlscontext: Arc<tokio_native_tls::TlsConnector>,
     answers: Arc<RwLock<TtlCache<Question, Vec<ResourceRecord>>>>,
 }
 
 impl Cache {
-    pub fn new(size: usize, url: String, certificate: Bytes) -> Self {
+    pub fn new(size: usize, address: String, servername:String) -> Self {
         Cache {
-            url,
+            address,
+            servername,
             tlscontext: Arc::new(tokio_native_tls::TlsConnector::from(
                 TlsConnector::builder()
-                    .add_root_certificate(Certificate::from_pem(&certificate).unwrap())
+                    // .add_root_certificate(Certificate::from_pem(&certificate).unwrap())
                     .build()
                     .expect("Error building certificate"),
             )),
@@ -46,7 +48,7 @@ impl Cache {
             Some(x) => x.to_vec(),
             None => {
                 let tlsconn = self.tlscontext.clone();
-                let new_value = get_from_tls(self.url.clone(), tlsconn, question.clone())
+                let new_value = get_from_tls(self.address.clone(), self.servername.clone(), tlsconn, question.clone())
                     .await
                     .expect("Error downloading data");
                 if new_value.len() > 0 {
@@ -108,13 +110,14 @@ pub async fn process_tcp(
 
 async fn get_from_tls(
     address: String,
+    name: String,
     tlsconn: Arc<tokio_native_tls::TlsConnector>,
     question: Question,
 ) -> std::io::Result<Vec<ResourceRecord>> {
     let socket = TcpStream::connect(address.clone()).await?;
 
     let mut socket = tlsconn
-        .connect(&address, socket)
+        .connect(&name, socket)
         .await
         .expect("Error connecting over TLS");
 

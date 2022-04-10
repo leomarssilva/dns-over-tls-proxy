@@ -60,13 +60,15 @@ async fn loop_udp(address: (Ipv4Addr, u16), cache: Cache) -> io::Result<()> {
 async fn main() -> io::Result<()> {
     logger::setup_logger().expect("Error setting log");
 
+    let upstream_name =
+        env::var("DOT_SERVER_NAME").expect("Need to set DOT_SERVER_NAME");
     let upstream_address =
-        env::var("UPSTREAM_DOT_SERVER").expect("Need to set UPSTREAM_DOT_SERVER");
-    let certificate = env::var("CERTIFICATE").expect("Need to set CERTIFICATE (PEM)");
-    let certificate_contents = fs::read_to_string(certificate).await?;
-    let cache = Cache::new(100, upstream_address, Bytes::from(certificate_contents));
+        env::var("DOT_SERVER_ADDRESS").expect("Need to set DOT_SERVER_ADDRESS");
+    // let certificate = env::var("CERTIFICATE").expect("Need to set CERTIFICATE (PEM)");
+    // let certificate_contents = fs::read_to_string(certificate).await?;
+    let cache = Cache::new(100, upstream_address, upstream_name);
 
-    let ip = env::var("HOSTNAME").unwrap_or(String::from("0.0.0.0"));
+    let ip = "0.0.0.0";
     let port = u16::from_str(&env::var("PORT").unwrap_or(String::from("53"))).unwrap();
     let address: (Ipv4Addr, u16) = (ip.parse().unwrap(), port);
 

@@ -28,7 +28,6 @@ COPY --from=builder /coredns/coredns /coredns
 
 # TODO: change image to use volumes and secrets
 COPY hosts.txt .
-COPY zone.txt .
 COPY Corefile .
 
 # Classic DNS

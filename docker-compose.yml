@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  # client:
+  #   build: test-infra/dnslookup/.
+  #   networks:
+  #     - external
+  #     - infrastructure-internal
+
+  proxy:
+    image: test-dns-proxy
+    ports:
+      - 53/tcp
+      - 53/udp
+    secrets:
+      - coredns_certificate_ca
+    environment:
+      - CERTIFICATE=/run/secrets/coredns_certificate_ca
+      - UPSTREAM_DOT_SERVER=coredns:5553
+    networks:
+      - external
+      - infrastructure-internal
+
+  coredns:
+    image: coredns
+    ports:
+      - 53/tcp
+      - 53/udp
+      - 5553/tcp # DoT
+    secrets:
+      - coredns_certificate
+      - coredns_private_key
+    networks:
+      - infrastructure-internal
+
+secrets:
+  coredns_certificate:
+    # file: ./my_secret.txt
+    external: true
+  coredns_certificate_ca:
+    external: true
+  coredns_private_key:
+    external: true
+
+networks:
+  infrastructure-internal:
+    internal: true
+    driver: bridge
+  external:
+    internal: false
+    driver: bridge
